@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Random;
 
 public class CA2D {
 	public ArrayList<List<Integer>> organism;
@@ -12,11 +12,10 @@ public class CA2D {
 	public CA2D(int organismSize)
 	{
 		organism = new ArrayList<List<Integer>>();
-        organism.add(Arrays.asList(0, 0, 0, 0, 0 ));
-        organism.add(Arrays.asList(0, 0, 0, 0, 0 ));
-        organism.add(Arrays.asList(0, 0, 0, 0, 0 ));
-        organism.add(Arrays.asList(0, 0, 0, 0, 0 ));
-        organism.add(Arrays.asList(0, 0, 0, 0, 0 ));
+        organism.add(Arrays.asList(0, 0, 0, 0));
+        organism.add(Arrays.asList(0, 0, 0, 0));
+        organism.add(Arrays.asList(0, 0, 0, 0));
+        organism.add(Arrays.asList(0, 0, 0, 0));
 		organism.get(organismSize/2).set(organismSize/2,1);
 		this.organismSize = organismSize;
 		transitionMatrix = new int [3][3][3][3][3];
@@ -62,11 +61,10 @@ public class CA2D {
 	public void step()
 	{
 		ArrayList<List<Integer>> auxiliarOrganism = new ArrayList<List<Integer>>(this.organismSize);
-        auxiliarOrganism.add(Arrays.asList(organism.get(0).get(0), organism.get(0).get(1), organism.get(0).get(2), organism.get(0).get(3), organism.get(0).get(4) ));
-        auxiliarOrganism.add(Arrays.asList(organism.get(1).get(0), organism.get(1).get(1), organism.get(1).get(2), organism.get(1).get(3), organism.get(1).get(4) ));
-        auxiliarOrganism.add(Arrays.asList(organism.get(2).get(0), organism.get(2).get(1), organism.get(2).get(2), organism.get(2).get(3), organism.get(2).get(4) ));
-        auxiliarOrganism.add(Arrays.asList(organism.get(3).get(0), organism.get(3).get(1), organism.get(3).get(2), organism.get(3).get(3), organism.get(3).get(4) ));
-        auxiliarOrganism.add(Arrays.asList(organism.get(4).get(0), organism.get(4).get(1), organism.get(4).get(2), organism.get(4).get(3), organism.get(4).get(4) ));
+        auxiliarOrganism.add(Arrays.asList(organism.get(0).get(0), organism.get(0).get(1), organism.get(0).get(2), organism.get(0).get(3)));
+        auxiliarOrganism.add(Arrays.asList(organism.get(1).get(0), organism.get(1).get(1), organism.get(1).get(2), organism.get(1).get(3)));
+        auxiliarOrganism.add(Arrays.asList(organism.get(2).get(0), organism.get(2).get(1), organism.get(2).get(2), organism.get(2).get(3)));
+        auxiliarOrganism.add(Arrays.asList(organism.get(3).get(0), organism.get(3).get(1), organism.get(3).get(2), organism.get(3).get(3)));
 		for (int i = 0; i < organismSize; i++)
 		{
 			for (int j = 0; j < organismSize;j++)
@@ -103,6 +101,16 @@ public class CA2D {
 		
 	}
 	
+	public double fitness1()
+	{
+		double Majority = this.calculateMajority();
+		int result[] = this.calculateAttractor();
+		double attractor = result[1];
+		if (attractor > 100000) attractor = 100000;
+		attractor = attractor/100000;		
+		return (Majority+attractor)/2;	
+	}
+	
 	public int[] calculateAttractor()
 	{
 		int[] Length = {0,0};
@@ -111,19 +119,21 @@ public class CA2D {
 		while(!repeatedState)
 		{
 			ArrayList<List<Integer>> auxiliarOrganism = new ArrayList<List<Integer>>(this.organismSize);
-	        auxiliarOrganism.add(Arrays.asList(organism.get(0).get(0), organism.get(0).get(1), organism.get(0).get(2), organism.get(0).get(3), organism.get(0).get(4) ));
-	        auxiliarOrganism.add(Arrays.asList(organism.get(1).get(0), organism.get(1).get(1), organism.get(1).get(2), organism.get(1).get(3), organism.get(1).get(4) ));
-	        auxiliarOrganism.add(Arrays.asList(organism.get(2).get(0), organism.get(2).get(1), organism.get(2).get(2), organism.get(2).get(3), organism.get(2).get(4) ));
-	        auxiliarOrganism.add(Arrays.asList(organism.get(3).get(0), organism.get(3).get(1), organism.get(3).get(2), organism.get(3).get(3), organism.get(3).get(4) ));
-	        auxiliarOrganism.add(Arrays.asList(organism.get(4).get(0), organism.get(4).get(1), organism.get(4).get(2), organism.get(4).get(3), organism.get(4).get(4) ));
+	        auxiliarOrganism.add(Arrays.asList(organism.get(0).get(0), organism.get(0).get(1), organism.get(0).get(2), organism.get(0).get(3)));
+	        auxiliarOrganism.add(Arrays.asList(organism.get(1).get(0), organism.get(1).get(1), organism.get(1).get(2), organism.get(1).get(3)));
+	        auxiliarOrganism.add(Arrays.asList(organism.get(2).get(0), organism.get(2).get(1), organism.get(2).get(2), organism.get(2).get(3)));
+	        auxiliarOrganism.add(Arrays.asList(organism.get(3).get(0), organism.get(3).get(1), organism.get(3).get(2), organism.get(3).get(3)));
 			if(!hash.containsKey(auxiliarOrganism))
 			{
+//				System.out.println(auxiliarOrganism.toString());
 				hash.put(auxiliarOrganism, Length[0]);
 				Length[0]++;
 				step();	
 			}
 			else 
 			{
+//				System.out.println("REPEATED ORGANISM");
+//				System.out.println(auxiliarOrganism.toString());
 				Length[1] = Length[0] - hash.get(auxiliarOrganism);
 				repeatedState = true;
 			}
@@ -178,31 +188,105 @@ public class CA2D {
 				}
 			}
 		}
-		return Majority;
+		return Majority/243;
 	}
 	
 	public static void main (String[] args)
 	{
 		long startTime = System.nanoTime();
-		int size = 5;
+		int size = 4;
+		int numberOfGenerations = 1;
 		CA2D generation[] = new CA2D[10];
-		for(int i = 0; i <10; i++)
+		double totalFitness = 0;
+		double fitness[] = new double[10];
+		HashMap<Double,Integer> map = new HashMap<Double,Integer>();
+		for(int i = 0; i <10; i++) //creates random population of intial organism and fills the first map
 		{
-			System.out.println("****************************************");
-			System.out.println("CA #" +i);
+//			System.out.println("****************************************");
+//			System.out.println("CA #" +i);
 			generation[i] = new CA2D(size);
 			generation[i].randomizeTransitionMatrix();
-			int result[] = generation[i].calculateAttractor();
-			System.out.println("TRAJECTORY LENGTH= "+ result[0]);
-			System.out.println("ATTRACTOR LENGTH = "+ result[1]);
-			System.out.println("MAJORITY = " + generation[i].calculateMajority()/243);
-			System.out.println("****************************************");
+			fitness[i] = -1*generation[i].fitness1();
+//			System.out.println("FITNESS = "+ -1*fitness[i]);
+//			System.out.println("****************************************");
+			totalFitness += -1*fitness[i];
+			map.put(-1*fitness[i], i);
+		}
+		CA2D generation2[] = new CA2D[10];
+		for(int i = 0;i < numberOfGenerations;i++)
+		{
+			generation2 = evoStep(generation,map,fitness,totalFitness);
+		}
+		for (int i = 0;i< generation2.length;i++)
+		{
+			System.out.println("NEW METHOD FITTNESS "+ i + " = " + generation2[i].fitness1());
+		}
+		System.out.println("MAP = " + map.toString());
+		System.out.println("UNSORTED FITNESS");
+		for(int i = 0;i<fitness.length;i++) 
+		{
+			fitness[i]*=-1;
+			System.out.println("FITNESS " + i + " = " + -1*fitness[i]);
+		}
+		System.out.println("");
+		Arrays.sort(fitness);
+		System.out.println("SORTED FITNESS");
+		for(int i = 0;i<fitness.length;i++) 
+		{
+			fitness[i]*=-1;
+			System.out.println("FITNESS " + i + " = " + fitness[i]);
+		}
+		System.out.println("");
+		System.out.println("TOTAL FITNESS = "+ totalFitness);
+		double normalizedFitness[] = new double[10];
+		double leap = 0.2;
+		for (int i = 0;i < fitness.length;i++)
+		{
+			if(i!=0) 
+			{
+				normalizedFitness[i]= normalizedFitness[i-1] + (fitness[i]/totalFitness);
+			}
+			else normalizedFitness[i] = fitness[i]/totalFitness;
+			System.out.println("NORMALIZED FITNESS " + i + " = " + normalizedFitness[i]);
+		}
+		Random r = new Random();
+		double randomStart = 0 + (leap - 0) * r.nextDouble();
+		CA2D nextGeneration[]= new CA2D[10];
+		int chosen = 0;
+		System.out.println("TOTAL FITNESS = "+ totalFitness);
+		System.out.println("LEAP = " +leap);
+		System.out.println("RANDOM START = " + randomStart);
+		for(int i = 0; i <5; i++) //select the five strongest with Stochastic universal sampling
+		{
+			System.out.println("ITERATION " + i);
+			double pointer = randomStart+(i*leap);
+			System.out.println("POINTER = " + pointer);
+			while(pointer >= normalizedFitness[chosen])
+			{
+				System.out.println("Skip organism " + chosen);
+				chosen++;
+			}
+			System.out.println("----->Take organism " + chosen);
+			System.out.println("ORIGINAL organism = " +  map.get(fitness[i]));
+			nextGeneration[i] = generation[map.get(fitness[i])];	
+			chosen++;
+		}
+		for(int i = 5; i < nextGeneration.length;i++) //fill the other five with combinations of the first five
+		{
+			int random1 = (int)(Math.random() * 5);
+			int random2 = (int)(Math.random() * 5);
+			while(random1==random2) random2 = (int)(Math.random() * 5);		
+			nextGeneration[i] = offspring(nextGeneration[random1],nextGeneration[random2]);
+			System.out.println(nextGeneration[i].fitness1());
+		}
+		for (int i = 0;i< nextGeneration.length;i++)
+		{
+			System.out.println("OLD METHOD FITTNESS "+ i + " = " + nextGeneration[i].fitness1());
 		}
 		long endTime = System.nanoTime();
 		long duration = endTime - startTime;
 		System.out.println("FIN");
-		duration = TimeUnit.SECONDS.convert(duration,TimeUnit.NANOSECONDS);
-		System.out.println("TIME = "+duration+ " seconds");
+		System.out.println("TIME = "+duration+ " nanoseconds");
 //		int generations = 20;
 		
 		/*
@@ -236,19 +320,97 @@ public class CA2D {
 		*/
 		
 		
-		//CA.writeTransition(0,0,1,0,0,1); // move one cell to the right
+//		CA.writeTransition(0,0,1,0,0,1); // move one cell to the right
 		
 		//CA.writeTransition(0,0,0,1,0,1); //move one cell to the left
 		
-		//CA.writeTransition(0,1,0,0,0,1); //move one cell up
+//		CA.writeTransition(0,1,0,0,0,1); //move one cell up
 		 
 		//CA.writeTransition(1, 0, 0, 0, 0, 1); //move one cell down
 		
 //		CA.writeTransition(0,0,1,0,0,2);//move right alternating 1s and 2s
 //		CA.writeTransition(0,0,2,0,0,1);
 		
-//		CA.randomizeTransitionMatrix();
-//		CA.organism.get(CA.organismSize/2).set(CA.organismSize/2,1);
+	}
 
+	private static CA2D[] evoStep(CA2D[] generation,
+			HashMap<Double, Integer> map, double[] fitness, double totalFitness) {
+		// TODO Auto-generated method stub
+		CA2D TNG[]= new CA2D[10];
+		Arrays.sort(fitness);
+		for(int i = 0;i<fitness.length;i++) 
+		{
+			fitness[i]*=-1;
+//			System.out.println("FITNESS " + i + " = " + fitness[i]);
+		}
+		double normalizedFitness[] = new double[10];
+		double leap = 0.2;
+		for (int i = 0;i < fitness.length;i++)
+		{
+			if(i!=0) 
+			{
+				normalizedFitness[i]= normalizedFitness[i-1] + (fitness[i]/totalFitness);
+			}
+			else normalizedFitness[i] = fitness[i]/totalFitness;
+//			System.out.println("NORMALIZED FITNESS " + i + " = " + normalizedFitness[i]);
+		}
+		Random r = new Random();
+		double randomStart = 0 + (leap - 0) * r.nextDouble();
+		int chosen = 0;
+		for(int i = 0; i <5; i++) //select the five strongest with Stochastic universal sampling
+		{
+//			System.out.println("ITERATION " + i);
+			double pointer = randomStart+(i*leap);
+//			System.out.println("POINTER = " + pointer);
+			while(pointer >= normalizedFitness[chosen])
+			{
+//				System.out.println("Skip organism " + chosen);
+				map.remove(map.get(fitness[chosen]));
+				chosen++;
+			}
+//			System.out.println("----->Take organism " + chosen);
+//			System.out.println("ORIGINAL organism = " +  map.get(fitness[i]));
+			TNG[i] = generation[map.get(fitness[i])];
+			double auxiliarFitness = map.get(fitness[chosen]);
+			map.remove(auxiliarFitness);
+			map.put(auxiliarFitness,i);
+			chosen++;
+		}
+		System.out.println("SIZE OF THE MAP AFTER SELECTION = " + map.size());
+		for(int i = 5; i < TNG.length;i++) //fill the other five with combinations of the first five
+		{
+			int random1 = (int)(Math.random() * 5);
+			int random2 = (int)(Math.random() * 5);
+			while(random1==random2) random2 = (int)(Math.random() * 5);		
+			TNG[i] = offspring(TNG[random1],TNG[random2]);
+			map.put(TNG[i].fitness1(),i);
+			System.out.println(TNG[i].fitness1());
+		}
+
+		return TNG;
+	}
+
+	private static CA2D offspring(CA2D father, CA2D mother) {
+		// TODO Auto-generated method stub
+		CA2D child = new CA2D(4);
+		for(int i = 0;i < 3; i++)
+		{
+			for(int j = 0;j < 3; j++)
+			{
+				for(int k = 0;k < 3; k++)
+				{
+					for(int l = 0;l < 3; l++)
+					{
+						for(int m = 0;m < 3; m++)
+						{
+							double random = (Math.random());
+							if(random < 0.5) child.transitionMatrix[i][j][k][l][m] = father.transitionMatrix[i][j][k][l][m];
+							else child.transitionMatrix[i][j][k][l][m] = mother.transitionMatrix[i][j][k][l][m];
+						}
+					}
+				}
+			}
+		}
+		return child;
 	}
 }
