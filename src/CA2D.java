@@ -107,7 +107,7 @@ public class CA2D {
 		int result[] = this.calculateAttractor();
 		double attractor = result[1];
 		if (attractor > 100000) attractor = 100000;
-		attractor = attractor/100000;		
+		attractor = attractor/100000;	
 		return (Majority+attractor)/2;	
 	}
 	
@@ -195,93 +195,44 @@ public class CA2D {
 	{
 		long startTime = System.nanoTime();
 		int size = 4;
-		int numberOfGenerations = 1;
+		int numberOfGenerations = 100;
 		CA2D generation[] = new CA2D[10];
 		double totalFitness = 0;
 		double fitness[] = new double[10];
 		HashMap<Double,Integer> map = new HashMap<Double,Integer>();
 		for(int i = 0; i <10; i++) //creates random population of intial organism and fills the first map
 		{
-//			System.out.println("****************************************");
-//			System.out.println("CA #" +i);
+			System.out.println("****************************************");
+			System.out.println("CA #" +i);
 			generation[i] = new CA2D(size);
 			generation[i].randomizeTransitionMatrix();
 			fitness[i] = -1*generation[i].fitness1();
-//			System.out.println("FITNESS = "+ -1*fitness[i]);
-//			System.out.println("****************************************");
+			System.out.println("FITNESS = "+ -1*fitness[i]);
+			System.out.println("****************************************");
 			totalFitness += -1*fitness[i];
 			map.put(-1*fitness[i], i);
 		}
 		CA2D generation2[] = new CA2D[10];
+		long time1,time2,time3;
+		time1=0;
+		time2=0;
+		time3=0;
 		for(int i = 0;i < numberOfGenerations;i++)
 		{
-			generation2 = evoStep(generation,map,fitness,totalFitness);
+//			System.out.println("****************************************");
+			if(i%100==0)System.out.println("GENERATION "+i);
+			generation2 = evoStep(generation,map,fitness,totalFitness,time1,time2,time3);
+//			System.out.println("****************************************");
 		}
+		double sortedFitness[]  = new double[10];;
 		for (int i = 0;i< generation2.length;i++)
 		{
-			System.out.println("NEW METHOD FITTNESS "+ i + " = " + generation2[i].fitness1());
+			sortedFitness[i] = -1*generation2[i].fitness1();
 		}
-		System.out.println("MAP = " + map.toString());
-		System.out.println("UNSORTED FITNESS");
-		for(int i = 0;i<fitness.length;i++) 
+		Arrays.sort(sortedFitness);
+		for (int i = 0;i< generation2.length;i++)
 		{
-			fitness[i]*=-1;
-			System.out.println("FITNESS " + i + " = " + -1*fitness[i]);
-		}
-		System.out.println("");
-		Arrays.sort(fitness);
-		System.out.println("SORTED FITNESS");
-		for(int i = 0;i<fitness.length;i++) 
-		{
-			fitness[i]*=-1;
-			System.out.println("FITNESS " + i + " = " + fitness[i]);
-		}
-		System.out.println("");
-		System.out.println("TOTAL FITNESS = "+ totalFitness);
-		double normalizedFitness[] = new double[10];
-		double leap = 0.2;
-		for (int i = 0;i < fitness.length;i++)
-		{
-			if(i!=0) 
-			{
-				normalizedFitness[i]= normalizedFitness[i-1] + (fitness[i]/totalFitness);
-			}
-			else normalizedFitness[i] = fitness[i]/totalFitness;
-			System.out.println("NORMALIZED FITNESS " + i + " = " + normalizedFitness[i]);
-		}
-		Random r = new Random();
-		double randomStart = 0 + (leap - 0) * r.nextDouble();
-		CA2D nextGeneration[]= new CA2D[10];
-		int chosen = 0;
-		System.out.println("TOTAL FITNESS = "+ totalFitness);
-		System.out.println("LEAP = " +leap);
-		System.out.println("RANDOM START = " + randomStart);
-		for(int i = 0; i <5; i++) //select the five strongest with Stochastic universal sampling
-		{
-			System.out.println("ITERATION " + i);
-			double pointer = randomStart+(i*leap);
-			System.out.println("POINTER = " + pointer);
-			while(pointer >= normalizedFitness[chosen])
-			{
-				System.out.println("Skip organism " + chosen);
-				chosen++;
-			}
-			System.out.println("----->Take organism " + chosen);
-			System.out.println("ORIGINAL organism = " +  map.get(fitness[i]));
-			nextGeneration[i] = generation[map.get(fitness[i])];	
-			chosen++;
-		}
-		for(int i = 5; i < nextGeneration.length;i++) //fill the other five with combinations of the first five
-		{
-			int random1 = (int)(Math.random() * 5);
-			int random2 = (int)(Math.random() * 5);
-			while(random1==random2) random2 = (int)(Math.random() * 5);		
-			nextGeneration[i] = offspring(nextGeneration[random1],nextGeneration[random2]);
-			System.out.println(nextGeneration[i].fitness1());
-		}
-		for (int i = 0;i< nextGeneration.length;i++)
-		{
-			System.out.println("OLD METHOD FITTNESS "+ i + " = " + nextGeneration[i].fitness1());
+			System.out.println("FINAL "+ i + " = " + sortedFitness[i]*-1);
 		}
 		long endTime = System.nanoTime();
 		long duration = endTime - startTime;
@@ -334,14 +285,12 @@ public class CA2D {
 	}
 
 	private static CA2D[] evoStep(CA2D[] generation,
-			HashMap<Double, Integer> map, double[] fitness, double totalFitness) {
-		// TODO Auto-generated method stub
+			HashMap<Double, Integer> map, double[] fitness, double totalFitness,long time1, long time2, long time3) {
 		CA2D TNG[]= new CA2D[10];
 		Arrays.sort(fitness);
 		for(int i = 0;i<fitness.length;i++) 
 		{
 			fitness[i]*=-1;
-//			System.out.println("FITNESS " + i + " = " + fitness[i]);
 		}
 		double normalizedFitness[] = new double[10];
 		double leap = 0.2;
@@ -357,41 +306,71 @@ public class CA2D {
 		Random r = new Random();
 		double randomStart = 0 + (leap - 0) * r.nextDouble();
 		int chosen = 0;
+//		System.out.println("HASHMAP AT START" + map.toString());
+//		System.out.println("HASHMAP SIZE AT START" + map.size());
+//		System.out.println("randomStart " + randomStart);
+//		System.out.println("leap = " + leap);
+		long start = System.nanoTime();
 		for(int i = 0; i <5; i++) //select the five strongest with Stochastic universal sampling
 		{
+//			double auxiliarFitness;
 //			System.out.println("ITERATION " + i);
 			double pointer = randomStart+(i*leap);
 //			System.out.println("POINTER = " + pointer);
-			while(pointer >= normalizedFitness[chosen])
+			while(pointer > normalizedFitness[chosen])
 			{
-//				System.out.println("Skip organism " + chosen);
-				map.remove(map.get(fitness[chosen]));
+//				System.out.println("<------ Ignore organism  " + chosen);
+//				System.out.println("KEY TO DELETE " + fitness[chosen]);
+				map.remove(fitness[chosen]);
+//				System.out.println("ELEMENT DELETED, NEW SIZE = " + map.size());
 				chosen++;
+				if(chosen>=10)break;
 			}
+			if(chosen>=10)break;
 //			System.out.println("----->Take organism " + chosen);
-//			System.out.println("ORIGINAL organism = " +  map.get(fitness[i]));
-			TNG[i] = generation[map.get(fitness[i])];
-			double auxiliarFitness = map.get(fitness[chosen]);
-			map.remove(auxiliarFitness);
-			map.put(auxiliarFitness,i);
+//			System.out.println("ORIGINAL organism = " +  map.get(fitness[chosen]));
+			TNG[i] = generation[map.get(fitness[chosen])];//Mirar esta linea... chosen o i? ojo!
+//			map.remove(fitness[chosen]);
+			map.put(fitness[chosen], i);
+//			auxiliarFitness = Math.abs(fitness[chosen]);
+//			System.out.println("NEW HASHMAP" + map.toString());
+//			System.out.println("ELEMENT REASSIGNED - SIZE OF THE MAP = " + map.size());
 			chosen++;
 		}
-		System.out.println("SIZE OF THE MAP AFTER SELECTION = " + map.size());
+		while(chosen < 10) {
+			map.remove(fitness[chosen]);
+			chosen++;
+		}
+//		System.out.println("MAP SIZE = "+map.size());
+		long finish = System.nanoTime();
+		time1 += (finish-start);
+		start = System.nanoTime();
 		for(int i = 5; i < TNG.length;i++) //fill the other five with combinations of the first five
 		{
 			int random1 = (int)(Math.random() * 5);
 			int random2 = (int)(Math.random() * 5);
 			while(random1==random2) random2 = (int)(Math.random() * 5);		
 			TNG[i] = offspring(TNG[random1],TNG[random2]);
-			map.put(TNG[i].fitness1(),i);
-			System.out.println(TNG[i].fitness1());
 		}
-
+		finish = System.nanoTime();
+		time2 += (finish-start);
+		start = System.nanoTime();
+		map.clear();
+		for(int i = 0; i <10; i++) //update fitness values and map
+		{
+			fitness[i] = -1*generation[i].fitness1();
+			totalFitness += -1*fitness[i];
+			map.put(-1*fitness[i], i);
+		}
+		finish = System.nanoTime();
+		time3 += (finish-start);
+//		System.out.println("TIME 1 = "+time1);
+//		System.out.println("TIME 2 = "+time2);
+//		System.out.println("TIME 3 = "+time3);
 		return TNG;
 	}
 
 	private static CA2D offspring(CA2D father, CA2D mother) {
-		// TODO Auto-generated method stub
 		CA2D child = new CA2D(4);
 		for(int i = 0;i < 3; i++)
 		{
