@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -252,12 +255,18 @@ public class CA2D {
 		return Majority/243;
 	}
 	
-	public static void main (String[] args)
+	public static void main (String[] args) throws IOException
 	{
 		long startTime = System.nanoTime();
 		int size = 4;
-		int numberOfGenerations = 10000;
+		int numberOfGenerations = 1000;
 		CA2D generation[] = new CA2D[10];
+		FileWriter fstream = new FileWriter("GA_10runs_avg_std.txt");
+		BufferedWriter out = new BufferedWriter(fstream);
+		out.write("Generation Best");
+		out.write("\n");
+		//for(int k = 0;k<10;k++)
+		{
 		for(int i = 0; i <10; i++) //creates random population of intial organism and fills the first map
 		{
 //			System.out.println("****************************************");
@@ -275,18 +284,43 @@ public class CA2D {
 //			totalFitness += -1*fitness[i];
 //			map.put(-1*fitness[i], i);
 		}
-		CA2D generation2[] = new CA2D[10];
+
 		for(int i = 0;i < numberOfGenerations;i++)
 		{
 //			System.out.println("****************************************");
 //			if(generation[i])
-			if(i%100==0) System.out.println("GENERATION "+i);
-			generation2 = evoStep(generation);
+//			if(i%100==0) System.out.println("GENERATION "+i);
+			generation = evoStep(generation);
+			CA2DComparator comparator = new CA2DComparator();
+			Arrays.sort(generation, comparator);
+			//double totalFitness = 0;
+			//for (int j = 0;j < generation.length;j++)
+			{
+				//totalFitness += generation[j].fitness;
+			}
+			try
+			{
+				  int max = (int)generation[0].fitness;
+				//  int min = (int)generation[9].fitness;
+				  out.write(i+" ");
+				  out.write(max+" ");
+				 // out.write(totalFitness/10+" ");
+				 // out.write(min+" ");
+				  out.write("\n");
+				  //Close the output stream
+				  //out.close();
+			}
+			catch (Exception e)
+			{//Catch exception if any
+				  System.err.println("Error: " + e.getMessage());
+			}
 //			System.out.println("****************************************");
 		}
+			}
+		  out.close();
 		CA2DComparator comparator = new CA2DComparator();
 		Arrays.sort(generation, comparator);
-		for (int i = 0;i< generation2.length;i++)
+		for (int i = 0;i< generation.length;i++)
 		{
 			System.out.println("FINAL "+ i + " = " + generation[i].fitness);
 		}
