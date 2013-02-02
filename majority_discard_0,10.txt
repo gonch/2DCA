@@ -1,0 +1,11 @@
+Generations needed to reach 2000 with majority discard 0,1
+117
+1053
+240
+90
+321
+81
+91
+202
+162
+66

@@ -13,6 +13,7 @@ public class CA2D {
 	public int [][][][][] transitionMatrix;
 	int organismSize;
 	double fitness;
+	double majority;
 	
 	public CA2D(int organismSize)
 	{
@@ -154,10 +155,6 @@ public class CA2D {
 		}
 	}
 	
-	public void writeRule(int[] rule)
-	{
-		
-	}
 	
 	public double fitness1()//compare to total attractor length of the population also majority
 	{
@@ -189,15 +186,12 @@ public class CA2D {
 	        auxiliarOrganism.add(Arrays.asList(organism.get(3).get(0), organism.get(3).get(1), organism.get(3).get(2), organism.get(3).get(3)));
 			if(!hash.containsKey(auxiliarOrganism))
 			{
-//				System.out.println(auxiliarOrganism.toString());
 				hash.put(auxiliarOrganism, Length[0]);
 				Length[0]++;
 				step();	
 			}
 			else 
 			{
-//				System.out.println("REPEATED ORGANISM");
-//				System.out.println(auxiliarOrganism.toString());
 				Length[1] = Length[0] - hash.get(auxiliarOrganism);
 				repeatedState = true;
 			}
@@ -260,13 +254,23 @@ public class CA2D {
 		long startTime = System.nanoTime();
 		int size = 4;
 		int numberOfGenerations = 1000;
-		CA2D generation[] = new CA2D[10];
-		FileWriter fstream = new FileWriter("GA_10runs_avg_std.txt");
+		double majorityInterval = 0.02;
+		int target = 10000;
+		FileWriter fstream = new FileWriter("majority_discard_0,5_target_10000_printing_M.txt");
 		BufferedWriter out = new BufferedWriter(fstream);
-		out.write("Generation Best");
+		CA2D generation[] = new CA2D[10];
+		out.write("CA# generation fitness_with_discard=0,02 Majority");
 		out.write("\n");
-		//for(int k = 0;k<10;k++)
+		int stepsToTarget = 0;;
+		int best = 0;
+		int max = 0;
+		int total = 0;
+		//for(int p = 0;p<5;p++)
 		{
+
+		for(int k = 0;k<10;k++)
+		{
+		System.out.println("CA #"+k);
 		for(int i = 0; i <10; i++) //creates random population of intial organism and fills the first map
 		{
 //			System.out.println("****************************************");
@@ -276,102 +280,79 @@ public class CA2D {
 			int result[] = generation[i].calculateAttractor();
 			int attractor = result[1];
 			generation[i].fitness = attractor;
-			//fitness[i] = -1*attractor;
-			//fitness[i] = -1*generation[i].fitness1();
+			generation[i].majority = generation[i].calculateMajority();
+//			fitness[i] = -1*attractor;
+//			fitness[i] = -1*generation[i].fitness1();
 //			System.out.println("FITNESS = "+ -1*fitness[i]);
 //			System.out.println("FITNESS = "+ generation[i].fitness);
 //			System.out.println("****************************************");
 //			totalFitness += -1*fitness[i];
 //			map.put(-1*fitness[i], i);
 		}
+		stepsToTarget = 0;
 
-		for(int i = 0;i < numberOfGenerations;i++)
-		{
-//			System.out.println("****************************************");
-//			if(generation[i])
-//			if(i%100==0) System.out.println("GENERATION "+i);
-			generation = evoStep(generation);
-			CA2DComparator comparator = new CA2DComparator();
-			Arrays.sort(generation, comparator);
-			//double totalFitness = 0;
-			//for (int j = 0;j < generation.length;j++)
+		//for(int i = 0;i < numberOfGenerations;i++)
+			while(generation[0].fitness < target && stepsToTarget < 100000 )
 			{
-				//totalFitness += generation[j].fitness;
+	//			System.out.println("****************************************");
+	//			if(generation[i])
+				if(stepsToTarget%1000==0) 
+					{
+					System.out.println("GENERATION "+stepsToTarget);
+					System.out.println("Fitness right now at "+generation[0].fitness);
+					}
+				generation = evoStepMajorityDiscard(generation,majorityInterval);
+//				generation = evoStepMajorityDiscard(generation, majorityInterval);
+				CA2DComparator comparator = new CA2DComparator();
+				Arrays.sort(generation, comparator);
+//				System.out.println("TOP = "+generation[0].fitness);
+				//double totalFitness = 0;
+				//for (int j = 0;j < generation.length;j++)
+				{
+					//totalFitness += generation[j].fitness;
+				}
+				try
+				{
+					  max = (int)generation[0].fitness;
+//					  int min = (int)generation[9].fitness;
+					  out.write(k+" ");
+					  out.write(stepsToTarget+" ");
+					  if (max > target) out.write(target+" ");
+					  else out.write(max+" ");
+					  out.write(Double.toString(generation[0].majority));
+//					  if(target-max>=0)out.write(target - max+" ");
+//					  else out.write("0 ");
+					  //out.write(totalFitness/10+" ");
+//					  out.write(min+" ");
+					  out.write("\n");
+					  stepsToTarget++;
+					  total++;
+				}
+				catch (Exception e)
+				{//Catch exception if any
+					  System.err.println("Error: " + e.getMessage());
+				}
+	//			System.out.println("****************************************");
 			}
-			try
-			{
-				  int max = (int)generation[0].fitness;
-				//  int min = (int)generation[9].fitness;
-				  out.write(i+" ");
-				  out.write(max+" ");
-				 // out.write(totalFitness/10+" ");
-				 // out.write(min+" ");
-				  out.write("\n");
-				  //Close the output stream
-				  //out.close();
-			}
-			catch (Exception e)
-			{//Catch exception if any
-				  System.err.println("Error: " + e.getMessage());
-			}
-//			System.out.println("****************************************");
+			best+=max;
+//			out.write(""+stepsToTarget);
+			stepsToTarget = 0;
+//			out.write("\n");
 		}
-			}
-		  out.close();
+//		System.out.println("FINAL TOTAL = "+best);
 		CA2DComparator comparator = new CA2DComparator();
 		Arrays.sort(generation, comparator);
 		for (int i = 0;i< generation.length;i++)
 		{
-			System.out.println("FINAL "+ i + " = " + generation[i].fitness);
+//			System.out.println("FINAL "+ i + " = " + generation[i].fitness);
 		}
 		long endTime = System.nanoTime();
 		long duration = endTime - startTime;
 		System.out.println("FIN");
 		System.out.println("TIME = "+duration+ " nanoseconds");
-//		int generations = 20;
-		
-		/*
-		 * public void writeTtransition (int top, int bottom, int left, int right, int centre, int value)
-		 */
-		
-		/*
-		 * GAME OF LIFE
-		*/
-		
-		/*
-		CA.organism[CA.organism.length/2][CA.organism.length/2] = 1;
-		CA.organism[CA.organism.length/2-1][CA.organism.length/2-1] = 1;
-		CA.organism[CA.organism.length/2-1][CA.organism.length/2+1] = 1;
-		CA.writeTransition(0,0,1,1,1,1);
-		CA.writeTransition(0,1,0,1,1,1);
-		CA.writeTransition(1,0,0,1,1,1);
-		CA.writeTransition(1,0,1,0,1,1);
-		CA.writeTransition(0,1,1,0,1,1);
-		CA.writeTransition(1,1,0,0,1,1);
-	
-		CA.writeTransition(1,1,1,0,1,1);
-		CA.writeTransition(1,1,0,1,1,1);
-		CA.writeTransition(1,0,1,1,1,1);
-		CA.writeTransition(0,1,1,1,1,1);
-		
-		CA.writeTransition(1,1,1,0,0,1);
-		CA.writeTransition(1,1,0,1,0,1);
-		CA.writeTransition(1,0,1,1,0,1);
-		CA.writeTransition(0,1,1,1,0,1);
-		*/
-		
-		
-//		CA.writeTransition(0,0,1,0,0,1); // move one cell to the right
-		
-		//CA.writeTransition(0,0,0,1,0,1); //move one cell to the left
-		
-//		CA.writeTransition(0,1,0,0,0,1); //move one cell up
-		 
-		//CA.writeTransition(1, 0, 0, 0, 0, 1); //move one cell down
-		
-//		CA.writeTransition(0,0,1,0,0,2);//move right alternating 1s and 2s
-//		CA.writeTransition(0,0,2,0,0,1);
-		
+		System.out.println("generations = "+ total/50);
+		}
+		  out.close();
 	}
 
 	private static CA2D[] evoStep(CA2D[] generation) {		
@@ -389,50 +370,35 @@ public class CA2D {
 		{
 			if(i!=0) normalizedFitness[i]= normalizedFitness[i-1] + (generation[i].fitness/totalFitness);
 			else normalizedFitness[i] = generation[i].fitness/totalFitness;
-//			System.out.println("NORMALIZED FITNESS " + i + " = " + normalizedFitness[i]);
 		}
 		Random r = new Random();
 		double randomStart = 0 + (leap - 0) * r.nextDouble();
 		int chosen = 0;
 		int chosen1 = -1;
 		int chosen2 = -1;
-//		System.out.println("randomStart " + randomStart);
-//		System.out.println("leap = " + leap);
 		for(int i = 0; i <2; i++) //select the TWO strongest with Stochastic universal sampling
 		{
-//			System.out.println("ITERATION " + i);
 			double pointer = randomStart+(i*leap);
-//			System.out.println("POINTER = " + pointer);
 			while(pointer > normalizedFitness[chosen])
 			{
-//				System.out.println("<------ Ignore organism  " + chosen);
-//				System.out.println("KEY TO DELETE " + fitness[chosen]);
-//				map.remove(fitness[chosen]);
-//				System.out.println("ELEMENT DELETED, NEW SIZE = " + map.size());
 				chosen++;
 				if(chosen>=10)break;
 			}
 			if(chosen>=10)break;
-//			System.out.println("----->Take organism " + chosen);
 			if(chosen1==-1) chosen1 = chosen;
 			else chosen2 = chosen;
-//			TNG[i] = generation[map.get(fitness[chosen])];//Mirar esta linea... chosen o i? ojo!;
 			chosen++;
 		}
 		if(chosen1 == -1 || chosen2 ==-1) throw new IllegalArgumentException("chosen 1 or chosen 2 not valid");
-//		System.out.println("CHOSEN 1 = "+chosen1+" - CHOSEN 2 = "+chosen2);
-//		System.out.println("MAP SIZE = "+map.size());
 		int worst = 9;
 		while (worst == chosen2 || worst == chosen1)
 		{
 			worst--;
 			if(worst==0) throw new IllegalArgumentException("worst out of range");
 		}
-//		System.out.println("WORST =" + worst);
 		for(int i = 0; i < 2; i++) { // delete the two worst and replace for two mutations of chosen1
 			generation[worst] = generation[chosen1].mutateOrganism();
 			generation[worst].fitness = generation[worst].fitness2(); //attractor as fitness
-//			System.out.println(worst+" organism deleted by mutation of chosen 1, new organism fitness = "+generation[worst].fitness);
 			worst--;
 			while (worst == chosen2 || worst == chosen1)
 			{
@@ -443,7 +409,6 @@ public class CA2D {
 		for(int i = 0; i < 2; i++) { // delete the two worst and replace for two mutations of chosen2
 			generation[worst] = generation[chosen2].mutateOrganism();
 			generation[worst].fitness = generation[worst].fitness2(); //attractor as fitness
-//			System.out.println(worst+" organism deleted by mutation of chosen 2, new organism fitness = "+generation[worst].fitness);
 			worst--;
 			while (worst == chosen2 || worst == chosen1)
 			{
@@ -453,17 +418,112 @@ public class CA2D {
 		}
 		generation[worst]=offspring(generation[chosen1],generation[chosen2]);
 		generation[worst].fitness = generation[worst].fitness2(); //attractor as fitness
-
-//		System.out.println(worst+" organism deleted by crossover, new organism fitness = "+generation[worst].fitness);
-//		System.out.println(worst+" organism deleted by offspring");
-//		System.out.println("NEXT GENERATION FITNESS");
-//		for(int i = 0;i< generation.length;i++)
-		{
-//			System.out.println(generation[i].fitness);
-		}
 		return generation;
 	}
 
+	private static CA2D[] evoStepMajorityDiscard(CA2D[] generation, double majorityInterval) {		
+		CA2DComparator comparator = new CA2DComparator();
+		
+		Arrays.sort(generation, comparator);
+		double normalizedFitness[] = new double[10];
+		double leap = 0.5; // (1/number of selected organisms)
+		double totalFitness = 0;
+		for (int i = 0;i < generation.length;i++)
+		{
+			totalFitness += generation[i].fitness;
+		}
+		for (int i = 0;i < generation.length;i++)
+		{
+			if(i!=0) normalizedFitness[i]= normalizedFitness[i-1] + (generation[i].fitness/totalFitness);
+			else normalizedFitness[i] = generation[i].fitness/totalFitness;
+		}
+		Random r = new Random();
+		double randomStart = 0 + (leap - 0) * r.nextDouble();
+		int chosen = 0;
+		int chosen1 = -1;
+		int chosen2 = -1;
+		for(int i = 0; i <2; i++) //select the TWO strongest with Stochastic universal sampling
+		{
+			double pointer = randomStart+(i*leap);
+			while(pointer > normalizedFitness[chosen])
+			{
+				chosen++;
+				if(chosen>=10)break;
+			}
+			if(chosen>=10)break;
+			if(chosen1==-1) chosen1 = chosen;
+			else chosen2 = chosen;
+			chosen++;
+		}
+		if(chosen1 == -1 || chosen2 ==-1) throw new IllegalArgumentException("chosen 1 or chosen 2 not valid");
+		int worst = 9;
+		while (worst == chosen2 || worst == chosen1)
+		{
+			worst--;
+			if(worst==0) throw new IllegalArgumentException("worst out of range");
+		}
+		double majorityChosen1 = generation[chosen1].calculateMajority();
+		int counter = 0;
+		for(int i = 0; i < 2; i++) { // delete the two worst and replace for two mutations of chosen1
+			generation[worst] = generation[chosen1].mutateOrganism();
+			generation[worst].majority = generation[worst].calculateMajority();
+			while(generation[worst].majority <= majorityChosen1 - majorityInterval ||
+					generation[worst].majority >= majorityChosen1 + majorityInterval)
+			{
+				generation[worst] = generation[chosen1].mutateOrganism();
+				generation[worst].majority = generation[worst].calculateMajority();
+				counter++;
+				if(counter%1000 == 0)System.out.println("1k discards");
+			}
+			generation[worst].fitness = generation[worst].fitness2(); //attractor as fitness
+			worst--;
+			while (worst == chosen2 || worst == chosen1)
+			{
+				worst--;
+				if(worst==0) throw new IllegalArgumentException("worst out of range");
+			}
+		}
+		double majorityChosen2 = generation[chosen2].calculateMajority();
+		counter = 0;
+		for(int i = 0; i < 2; i++) { // delete the two worst and replace for two mutations of chosen2
+			generation[worst] = generation[chosen2].mutateOrganism();
+			generation[worst].majority = generation[worst].calculateMajority();
+			while(generation[worst].majority <= majorityChosen2 - majorityInterval ||
+					generation[worst].majority >= majorityChosen2 + majorityInterval)
+			{
+				generation[worst] = generation[chosen2].mutateOrganism();
+				generation[worst].majority = generation[worst].calculateMajority();	
+				counter++;
+				if(counter%1000 == 0)System.out.println("1k discards");
+			}
+			generation[worst].fitness = generation[worst].fitness2(); //attractor as fitness
+			worst--;
+			while (worst == chosen2 || worst == chosen1)
+			{
+				worst--;
+				if(worst==0) throw new IllegalArgumentException("worst out of range");
+			}
+		}
+		CA2D offspring = new CA2D(4);
+		offspring = offspring(generation[chosen1],generation[chosen2]);
+		double majorityOffspring = offspring.calculateMajority();
+//		System.out.println(majorityOffspring);
+		offspring = offspring.mutateOrganism();
+		generation[worst] = offspring;
+		counter = 0;
+		while(offspring.majority <= majorityOffspring - majorityInterval ||
+				offspring.majority >= majorityOffspring + majorityInterval)
+		{
+			offspring = generation[worst].mutateOrganism();
+			offspring.majority = offspring.calculateMajority();
+//			System.out.println("Failed majority = "+offspring.majority);
+//			counter++;
+//			if(counter%10000 == 0)System.out.println("1k discards");
+		}
+		generation[worst] = offspring;
+		generation[worst].fitness = generation[worst].fitness2(); //attractor as fitness
+		return generation;
+	}
 	private static CA2D offspring(CA2D father, CA2D mother) {//split into two parts
 		CA2D child = new CA2D(4);
 		double randomDouble = (Math.random());
@@ -507,21 +567,35 @@ public class CA2D {
 	        double fitness1 = CA2D1.fitness;
 	        double fitness2 = CA2D2.fitness;
 	 
-	        if (fitness1 < fitness2)return +1;
-	        else if (fitness1 > fitness2)return -1;
+	        if (fitness1 < fitness2) return +1;
+	        else if (fitness1 > fitness2) return -1;
 	        else return 0;
 	    }
 	}
 	// mutation=1/N chance [DONE] - changed to 2%
 	// offspring done by taking half from father and half from mother [DONE]
-	// select 2 organisms, mutate them twice and replace the 4 worse, crossover and generate another one replacing the worst left;
-	// for each generation, best distance vs generation , best parameter vs generation (average and deviation)
-	// allways keep the best organism
-	// --- 10 tests with GA to plot generations vs fitness (average and deviation). each generation, save best, worst and average 
-	// add target and see how many generations it takes to get there (500,1000,15000,20000,100000(impossible)) 50k generation cap
+	// select 2 organisms, mutate them twice and replace the 4 worse, crossover and generate another one replacing the worst left; [DONE]
+	// for each generation, best distance vs generation , best parameter vs generation (average and deviation) [DONE]
+	// allways keep the best organism [DONE]
+	// --- 10 tests with GA to plot generations vs fitness (average and deviation). each generation, save best, worst and average [DONE]
+	// add target and see how many generations it takes to get there (500,1000,15000,20000,100000(impossible)) 50k generation cap [DONE]
 	// discard with majority -> thershold of difference: 
 	// calcaulate majority comparing best to mutated mutated and crossover (+-0.02) if it does not get in the interval, mutate again
 	// mutate crossover too!;
 	// fitness 2 = normalize attractor with sum of all, and same for majority then 50% each
 	// in target graph, fitness is target-best
+	// majority should help reduce the dispersion -> try and prove it
+	// genetic distance = if two different genotypes produce similar phenotype, they should be similar.
+	// majority discard -> target plot and stdv
+	// majority in fitness -> target plot and stdv
+	// try with different thershold of M for discard
+	// later_> modify percentage of fitness atributes with time and see how it works
+	// ISNT MAJORITY DISCARD A WAY TO DECREASE MUTATION??
+	// report = use parameter to narrow search space, mejorar el algoritmo
+	// limit generations and unlimited target
+	// lamda en funcion de los steps
+	// majority parameter of empty organism?
+	// majority average of random organisms
+	// calculate with lambda
+	// 10k target and see where it's moving when it reaches target with .01 and .02 and .05
 }
